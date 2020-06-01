@@ -1,9 +1,9 @@
 '''
 Date created: 30th April 2020
+Author: Kunal Deoskar
 
-This file is to get the BP distribution. We give 'Ntrials' and a 'save' key which is used to save as well as used as the seed.
+This file is to get the BP distribution. We give 'Ntrials' and a 'save' key which is used to save as well as used as the seed if the process needs to be controlled via shell scripts.
 
-This includes the dt_min change to 0.5 s as recommended by Ignacio.
 '''
 
 import argparse, os, time
@@ -25,7 +25,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 p = argparse.ArgumentParser(description="Getting BP distribution for scrambled datasets.",formatter_class=argparse.RawTextHelpFormatter)
-p.add_argument("--N_trials", default=100, type=int,
+p.add_argument("--N_trials", default=1000, type=int,
                 help="Number of scrambled trials")
 p.add_argument("--savekey", default=1.0, type=float,
                 help="Name for save key for the data files")
@@ -71,7 +71,7 @@ with time('ana setup'):
 min_data_set = ana.mjd_min
 max_data_set = ana.mjd_max
 # Load the complete GRB list
-GRB_main_list = np.genfromtxt("/home/kdeoskar/projects/GRB/data/GRBdata/GRBs_withoutheader.txt", 
+GRB_main_list = np.genfromtxt("GRBs_withoutheader.txt", 
                                dtype = [('GRB_name','S20'),('GRB_name_Fermi','S20'),('t_trigger','S20'),
                                         ('ra','f4'), ('decl','float'), ('pos_error','f4'), ('T90','f4'), ('T90_error','f4'),
                                         ('T90_start','S20'), ('fluence','f4'),('fluence_error','f4'),
@@ -87,7 +87,9 @@ my_selection = ((GRB_main_list['pos_error']>-1)*(GRB_main_list['pos_error']<0.2)
                 (GRB_main_list['mjd']>(min_data_set+14.00))*(GRB_main_list['mjd']<(max_data_set-14.00)))
 GRBs_of_interest = GRB_main_list[my_selection]
 
-trials_dir = cy.utils.ensure_dir('/data/user/kdeoskar/big_data_files/trials_files/trials_GFU/2011_2018/10k_each')
+#Can be done for either precursor or prompt+afterglow. The results should be statistically similar.
+#I have obtained the individual p-values from afterglow searches. These p-values were then used to perform the Binomial test
+trials_dir = cy.utils.ensure_dir('Background_AG_10k_each')
 bg_dir = cy.utils.ensure_dir('{}/bg'.format(trials_dir))
 
 with time('load bg trials'):
@@ -121,7 +123,7 @@ def give_me_tr(raGRB, decGRB, mjd_GRB):
     
     mjd_grb =  mjd_GRB
     #The next two variables are only for the injection cases
-    inj_offset = 0.5 
+     
     inj_duration = 30 / 86400.
     
     search_duration = 14.00
@@ -140,7 +142,7 @@ def give_me_tr(raGRB, decGRB, mjd_GRB):
         'seeder':       cy.seeding.UTFSeeder(threshold = 1),
         # time-dep injector
         'sig':          'tw',
-        'sig_kw':       dict(t0=mjd_grb + inj_offset, dt=inj_duration, box_mode='pre'),
+        'sig_kw':       dict(t0=mjd_grb , dt=inj_duration, box_mode='post'),
         #Note that the box_mode here is set to 'pre'. This is so that we can control injecting the size of pulses.
         # hold t0 fixed
         'fitter_args':  dict(t0=mjd_grb),
@@ -158,7 +160,6 @@ with time('trs setup'):
 
 #defining the injector
 
-#inj_offset = 0.5 
 inj_duration = 14.0
 mjd_grb = 58386.61
 
