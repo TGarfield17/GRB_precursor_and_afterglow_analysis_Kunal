@@ -1,10 +1,11 @@
 '''
 Created: 25th May 2020
+Author: Kunal Deoskar
 Here I do:
 
-1. Get all trials for GFU 8 year background for 'Precursors'.
-2. Doing this for the unblinding.
-3. Will use these lists to obtain the local p-values for the respective search.
+1. Get all trials for GFU 8 year background for the 'Precursor' searches.
+2. We store all the respective trials in folder assigned according to the GRB ID number
+3. Will use these lists to obtain the local p-values from the TS when performing the final analysis.
 '''
 
 import numpy as np
@@ -27,13 +28,13 @@ cy.CONF['ana'] = ana
 min_data_set = ana.mjd_min
 max_data_set = ana.mjd_max
 
-#Defining rh path to the directory
-trials_dir =  cy.utils.ensure_dir('/data/user/kdeoskar/big_data_files/trials_files/for_unblinding/precursor')
+#Defining the path to the directory
+trials_dir =  cy.utils.ensure_dir('Background_PC_10k_each')
 
 cy.CONF['mp_cpus'] = 5
 
 # Load the complete GRB list
-GRB_main_list = np.genfromtxt("/home/kdeoskar/projects/GRB/data/GRBdata/GRBs_withoutheader.txt", 
+GRB_main_list = np.genfromtxt("GRBs_withoutheader.txt", 
                                dtype = [('GRB_name','S20'),('GRB_name_Fermi','S20'),('t_trigger','S20'),
                                         ('ra','Float64'), ('decl','float'), ('pos_error','Float64'), ('T90','Float64'), 
                                         ('T90_error','Float64'),
@@ -58,8 +59,7 @@ def do_background_trials(ID, raGRB, decGRB, mjdGRB, N, Seed):#Changed the seed h
     src = cy.utils.Sources(ra=np.radians(raGRB), dec=np.radians(decGRB))
     
     mjd_grb =  mjdGRB
-    inj_offset = 1.0
-    inj_duration = 1 / 86400.
+    inj_duration = 30 / 86400.
     search_duration = 14.00 
     
     afterglow = {
@@ -76,7 +76,7 @@ def do_background_trials(ID, raGRB, decGRB, mjdGRB, N, Seed):#Changed the seed h
         'seeder':       cy.seeding.UTFSeeder(threshold = 1),
         # time-dep injector
         'sig':          'tw',
-        'sig_kw':       dict(t0=mjd_grb, dt=inj_offset, box_mode='pre'),
+        'sig_kw':       dict(t0=mjd_grb, dt=inj_duration, box_mode='pre'),
         # hold t0 fixed
         'fitter_args':  dict(t0=mjd_grb),
         # use multiprocessing
@@ -98,10 +98,9 @@ def ndarray_to_Chi2TSD(trials):
     return cy.dists.Chi2TSD(cy.utils.Arrays(trials))
 
 #Do the background trials
-background_key =5
-if background_key >1:
-    for x in range(len(GRBs_of_interest)):
-        do_background_trials(x, GRBs_of_interest[x]['ra'], GRBs_of_interest[x]['decl'], GRBs_of_interest[x]['mjd'], 10000, Seed=23)
+
+for x in range(len(GRBs_of_interest)):
+    do_background_trials(x, GRBs_of_interest[x]['ra'], GRBs_of_interest[x]['decl'], GRBs_of_interest[x]['mjd'], 10000, Seed=23)
 
 
 
