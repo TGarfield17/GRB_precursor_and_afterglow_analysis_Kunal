@@ -36,6 +36,21 @@ timer = cy.timing.Timer()
 time = timer.time
 
 def BinomialTest(pValues, kmax, returnArray=False):
+    '''
+    This function is used to perform the Binomial test for a list of p-values.
+    
+    Input: 
+        pValues: array of p-values
+        kmax: int, the kmax to be used for the Binomial test
+        returnArray: 'True' if you want the array containing the computed Binomial Probabilities at each k.
+        
+    Output:
+        pThresh: The local p-value at 'k' where we have the Best (lowest) Binomial Probabilitiy for the Binomial test.
+        kBest: (int) The value of 'k' at which we have the Best (lowest) Binomial Probabilitiy 
+        BpBest: (float) The value fo the Best Binomial Probabilitiy.
+        BpArr: (array) The array containing the computed Binomial Probabilities at each k.
+    '''
+    
     pSorted = np.sort(pValues)
     n = len(pSorted)
     if (kmax==0):
@@ -50,15 +65,6 @@ def BinomialTest(pValues, kmax, returnArray=False):
         return pThresh, kBest, BpBest, BpArr
     else:
         return pThresh, kBest, BpBest
-
-    
-def RandomizedTrials(n, kmax, trials):
-    pThreshArr = np.ones(trials)
-    kBestArr = np.ones(trials)
-    BpBestArr = np.ones(trials)
-    for i in np.arange(trials):
-        pThreshArr[i], kBestArr[i], BpBestArr[i] = BinomialTest(np.random.random(n),kmax)
-    return pThreshArr, kBestArr, BpBestArr
 
 def ndarray_to_Chi2TSD(trials):
     return cy.dists.Chi2TSD(cy.utils.Arrays(trials))
@@ -118,7 +124,18 @@ MJD_GRB = GRBs_of_interest['mjd'] #+(GRBs_of_interest['T100']/86400.0)
 
 #Defining the tr
 def give_me_tr(raGRB, decGRB, mjd_GRB):
+    '''
+    This functiom is used to get the trial runners for the prompt+afterglow search for the GRBs to be used 
+    in csky.trial.MultiTrialRunner to perform the analysis.
     
+    Inputs:
+        raGRB: (float) Right Ascension of the GRB in degrees
+        decGRB: (float) Declination of the GRB in degrees
+        mjd_GRB: (float) 'T_0' of the GRB in Modified Julian Date (in unit of days). This will be the time where
+                 the time window is held fixed.
+    Output:
+        the trial_runner for the respective GRB for the prompt+afterglow search.
+    '''    
     src = cy.utils.Sources(ra=np.radians(raGRB), dec=np.radians(decGRB))
     
     mjd_grb =  mjd_GRB
