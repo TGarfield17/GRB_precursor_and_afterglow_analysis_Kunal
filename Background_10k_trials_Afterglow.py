@@ -56,6 +56,21 @@ bg_dir = cy.utils.ensure_dir('{}'.format(trials_dir))
 
 def do_background_trials(ID, raGRB, decGRB, mjdGRB, N, seed):
     
+    '''
+    This function is used to do background trials for prompt+afterglow search for one GRB.
+    
+    Inputs:
+        ID: (int) ID of the GRB
+        raGRB: (float) Right Ascension of the GRB in degrees
+        decGRB: (float) Declination of the GRB in degrees
+        mjd_GRB: (float) 'T_0' of the GRB in Modified Julian Date (in unit of days). This will be the time where
+                 the time window is held fixed.
+        N: The number of trials for which we need to repeat this process
+        seed: The seed for the randomization
+    Output:
+        Saves the fit information from N number of background only trials.
+    '''
+    
     src = cy.utils.Sources(ra=np.radians(raGRB), dec=np.radians(decGRB))
     
     mjd_grb =  mjdGRB
